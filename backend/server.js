@@ -1,29 +1,28 @@
 const express = require("express");
+const cors = require("cors");
 const prisma = require("./src/config/database");
+
+const authRoutes = require("./src/routes/authRoutes");
 const projectRoutes = require("./src/routes/projectRoutes");
 const taskRoutes = require("./src/routes/taskRoutes");
 const dashboardRoutes = require("./src/routes/dashboardRoutes");
-const cors = require("cors");
-const authRoutes = require("./src/routes/authRoutes");
 
 const app = express();
 
 const PORT = process.env.PORT || 5000;
 
-app.use(express.json());
+// Middleware
 app.use(cors());
+app.use(express.json());
 
-
+// Root route
 app.get("/", (req, res) => {
   res.json({
     message: "Project Management API is running",
   });
 });
 
-app.get("/test", (req, res) => {
-  res.json({ message: "TEST ROUTE WORKS" });
-});
-
+// Health check
 app.get("/health", async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
@@ -42,12 +41,20 @@ app.get("/health", async (req, res) => {
   }
 });
 
+// Test route
+app.get("/test", (req, res) => {
+  res.json({
+    message: "TEST ROUTE WORKS",
+  });
+});
+
+// API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api", taskRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
-
+// Start server
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
