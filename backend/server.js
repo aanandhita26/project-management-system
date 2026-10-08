@@ -21,6 +21,10 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get("/test", (req, res) => {
+  res.json({ message: "TEST ROUTE WORKS" });
+});
+
 app.get("/api/health", async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
