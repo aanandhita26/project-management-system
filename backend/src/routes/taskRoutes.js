@@ -3,6 +3,8 @@ const {
   createTask,
   getTasks,
   getTask,
+  updateTask,
+  deleteTask,
 } = require("../controllers/taskController");
 const authenticate = require("../middleware/authMiddleware");
 
@@ -27,4 +29,15 @@ router.get(
   getTask
 );
 
+router.put(
+  "/projects/:projectId/tasks/:taskId",
+  authenticate,
+  updateTask
+);
+
+router.delete(
+  "/projects/:projectId/tasks/:taskId",
+  authenticate,
+  deleteTask
+);
 module.exports = router;

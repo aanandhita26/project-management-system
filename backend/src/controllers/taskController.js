@@ -140,8 +140,115 @@ const getTask = async (req, res) => {
   }
 };
 
+const updateTask = async (req, res) => {
+  try {
+    const { projectId, taskId } = req.params;
+
+    const updateTaskSchema = z.object({
+      name: z.string().trim().min(1).optional(),
+      description: z.string().trim().optional(),
+      priority: z.enum(["LOW", "MEDIUM", "HIGH"]).optional(),
+      status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED"]).optional(),
+      dueDate: z.string().optional(),
+    });
+
+    const result = updateTaskSchema.safeParse(req.body);
+
+    if (!result.success) {
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: result.error.flatten().fieldErrors,
+      });
+    }
+
+    const existingTask = await prisma.task.findFirst({
+      where: {
+        id: taskId,
+        projectId,
+        project: {
+          userId: req.user.userId,
+        },
+      },
+    });
+
+    if (!existingTask) {
+      return res.status(404).json({
+        message: "Task not found",
+      });
+    }
+
+    const { name, description, priority, status, dueDate } = result.data;
+
+    const task = await prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && {
+          description: description || null,
+        }),
+        ...(priority !== undefined && { priority }),
+        ...(status !== undefined && { status }),
+        ...(dueDate !== undefined && {
+          dueDate: dueDate ? new Date(dueDate) : null,
+        }),
+      },
+    });
+
+    return res.status(200).json({
+      message: "Task updated successfully",
+      task,
+    });
+  } catch (error) {
+    console.error("Update task error:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+const deleteTask = async (req, res) => {
+  try {
+    const { projectId, taskId } = req.params;
+
+    const existingTask = await prisma.task.findFirst({
+      where: {
+        id: taskId,
+        projectId,
+        project: {
+          userId: req.user.userId,
+        },
+      },
+    });
+
+    if (!existingTask) {
+      return res.status(404).json({
+        message: "Task not found",
+      });
+    }
+
+    await prisma.task.delete({
+      where: {
+        id: taskId,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Task deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete task error:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   createTask,
   getTasks,
   getTask,
+  updateTask,
+  deleteTask,
 };
