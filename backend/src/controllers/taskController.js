@@ -108,7 +108,40 @@ const getTasks = async (req, res) => {
   }
 };
 
+const getTask = async (req, res) => {
+  try {
+    const { projectId, taskId } = req.params;
+
+    const task = await prisma.task.findFirst({
+      where: {
+        id: taskId,
+        projectId,
+        project: {
+          userId: req.user.userId,
+        },
+      },
+    });
+
+    if (!task) {
+      return res.status(404).json({
+        message: "Task not found",
+      });
+    }
+
+    return res.status(200).json({
+      task,
+    });
+  } catch (error) {
+    console.error("Get task error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   createTask,
   getTasks,
+  getTask,
 };
