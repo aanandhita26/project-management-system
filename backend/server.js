@@ -1,5 +1,6 @@
 const express = require("express");
 const prisma = require("./src/config/database");
+const projectRoutes = require("./src/routes/projectRoutes");
 const authRoutes = require("./src/routes/authRoutes");
 
 const app = express();
@@ -33,6 +34,7 @@ app.get("/api/health", async (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/projects", projectRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
