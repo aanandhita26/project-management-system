@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-
-const API = "http://localhost:5000/api";
+const API = "https://project-management-api-t1ml.onrender.com/api";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
