@@ -73,6 +73,7 @@ const createTask = async (req, res) => {
 const getTasks = async (req, res) => {
   try {
     const { projectId } = req.params;
+    const { search, status, priority } = req.query;
 
     const project = await prisma.project.findFirst({
       where: {
@@ -90,15 +91,25 @@ const getTasks = async (req, res) => {
     const tasks = await prisma.task.findMany({
       where: {
         projectId,
+        ...(search && {
+          name: {
+            contains: search,
+            mode: "insensitive",
+          },
+        }),
+        ...(status && {
+          status,
+        }),
+        ...(priority && {
+          priority,
+        }),
       },
       orderBy: {
         createdAt: "desc",
       },
     });
 
-    return res.status(200).json({
-      tasks,
-    });
+    return res.status(200).json({ tasks });
   } catch (error) {
     console.error("Get tasks error:", error);
 

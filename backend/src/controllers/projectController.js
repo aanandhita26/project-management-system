@@ -84,18 +84,27 @@ const createProject = async (req, res) => {
 
 const getProjects = async (req, res) => {
   try {
+    const { search, status } = req.query;
+
     const projects = await prisma.project.findMany({
       where: {
         userId: req.user.userId,
+        ...(search && {
+          name: {
+            contains: search,
+            mode: "insensitive",
+          },
+        }),
+        ...(status && {
+          status,
+        }),
       },
       orderBy: {
         createdAt: "desc",
       },
     });
 
-    return res.status(200).json({
-      projects,
-    });
+    return res.status(200).json({ projects });
   } catch (error) {
     console.error("Get projects error:", error);
 
@@ -104,7 +113,6 @@ const getProjects = async (req, res) => {
     });
   }
 };
-
 const getProject = async (req, res) => {
   try {
     const { id } = req.params;
@@ -214,9 +222,44 @@ const updateProject = async (req, res) => {
   }
 };
 
+const deleteProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const existingProject = await prisma.project.findFirst({
+      where: {
+        id,
+        userId: req.user.userId,
+      },
+    });
+
+    if (!existingProject) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+
+    await prisma.project.delete({
+      where: {
+        id,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Project deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete project error:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   createProject,
   getProjects,
   getProject,
   updateProject,
+  deleteProject,
 };
