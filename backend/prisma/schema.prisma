@@ -1,7 +1,6 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
-}
+  provider = "prisma-client-js"
+}npx prisma validate
 
 datasource db {
   provider = "postgresql"
