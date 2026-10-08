@@ -82,6 +82,141 @@ const createProject = async (req, res) => {
   }
 };
 
+const getProjects = async (req, res) => {
+  try {
+    const projects = await prisma.project.findMany({
+      where: {
+        userId: req.user.userId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return res.status(200).json({
+      projects,
+    });
+  } catch (error) {
+    console.error("Get projects error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+const getProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const project = await prisma.project.findFirst({
+      where: {
+        id,
+        userId: req.user.userId,
+      },
+    });
+
+    if (!project) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+
+    return res.status(200).json({
+      project,
+    });
+  } catch (error) {
+    console.error("Get project error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+const updateProject = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const updateProjectSchema = z
+      .object({
+        name: z.string().trim().min(1, "Project name is required").optional(),
+        description: z.string().trim().optional(),
+        status: z
+          .enum(["NOT_STARTED", "IN_PROGRESS", "COMPLETED"])
+          .optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+      })
+      .refine(
+        (data) => {
+          if (!data.startDate || !data.endDate) return true;
+          return new Date(data.endDate) >= new Date(data.startDate);
+        },
+        {
+          message: "End date must be on or after start date",
+          path: ["endDate"],
+        }
+      );
+
+    const result = updateProjectSchema.safeParse(req.body);
+
+    if (!result.success) {
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: result.error.flatten().fieldErrors,
+      });
+    }
+
+    const existingProject = await prisma.project.findFirst({
+      where: {
+        id,
+        userId: req.user.userId,
+      },
+    });
+
+    if (!existingProject) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+
+    const { name, description, status, startDate, endDate } = result.data;
+
+    const project = await prisma.project.update({
+      where: {
+        id,
+      },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && {
+          description: description || null,
+        }),
+        ...(status !== undefined && { status }),
+        ...(startDate !== undefined && {
+          startDate: startDate ? new Date(startDate) : null,
+        }),
+        ...(endDate !== undefined && {
+          endDate: endDate ? new Date(endDate) : null,
+        }),
+      },
+    });
+
+    return res.status(200).json({
+      message: "Project updated successfully",
+      project,
+    });
+  } catch (error) {
+    console.error("Update project error:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   createProject,
+  getProjects,
+  getProject,
+  updateProject,
 };
