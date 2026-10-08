@@ -1,9 +1,12 @@
 const express = require("express");
 const prisma = require("./src/config/database");
+const authRoutes = require("./src/routes/authRoutes");
 
 const app = express();
 
 const PORT = 5000;
+
+app.use(express.json());
 
 app.get("/", (req, res) => {
   res.json({
@@ -28,6 +31,8 @@ app.get("/api/health", async (req, res) => {
     });
   }
 });
+
+app.use("/api/auth", authRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
