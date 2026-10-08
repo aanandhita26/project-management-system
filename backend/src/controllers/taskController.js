@@ -70,6 +70,45 @@ const createTask = async (req, res) => {
   }
 };
 
+const getTasks = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+
+    const project = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        userId: req.user.userId,
+      },
+    });
+
+    if (!project) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
+    }
+
+    const tasks = await prisma.task.findMany({
+      where: {
+        projectId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return res.status(200).json({
+      tasks,
+    });
+  } catch (error) {
+    console.error("Get tasks error:", error);
+
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   createTask,
+  getTasks,
 };
