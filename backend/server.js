@@ -3,6 +3,7 @@ const prisma = require("./src/config/database");
 const projectRoutes = require("./src/routes/projectRoutes");
 const taskRoutes = require("./src/routes/taskRoutes");
 const dashboardRoutes = require("./src/routes/dashboardRoutes");
+const cors = require("cors");
 const authRoutes = require("./src/routes/authRoutes");
 
 const app = express();
@@ -10,6 +11,9 @@ const app = express();
 const PORT = 5000;
 
 app.use(express.json());
+app.use(cors({
+  origin: "http://localhost:5173",
+}));
 
 app.get("/", (req, res) => {
   res.json({
@@ -41,6 +45,6 @@ app.use("/api", taskRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
 });
